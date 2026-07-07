@@ -27,28 +27,21 @@ jobs:
           use-public-rspm: true
 
       - name: Print environment
-        shell: Rscript {0}
         run: |
-          cat("OS:", Sys.info()[["sysname"]], "\n")
-          cat("R:", R.version$version.string, "\n")
-          if (.Platform$OS.type == "windows") {
-            cat("Rtools on PATH:", any(grepl("rtools", Sys.getenv("PATH"), ignore.case = TRUE)), "\n")
-          }
+          Rscript -e "cat('OS:', Sys.info()[['sysname']], '\n')"
+          Rscript -e "cat('R:', R.version$version.string, '\n')"
+          Rscript -e "cat('R_LIBS_USER:', Sys.getenv('R_LIBS_USER'), '\n')"
 
       - name: Install pak
-        shell: Rscript {0}
         run: |
-          install.packages("pak", repos = "https://cloud.r-project.org")
+          Rscript -e "lib <- Sys.getenv('R_LIBS_USER'); dir.create(lib, recursive = TRUE, showWarnings = FALSE); install.packages('pak', lib = lib, repos = 'https://cloud.r-project.org')"
+          Rscript -e "stopifnot(requireNamespace('pak', quietly = TRUE)); cat('pak installed OK\n')"
 
       - name: Install dv.manager from GitHub (latest release)
-        shell: Rscript {0}
         run: |
-          pak::pak("Boehringer-Ingelheim/dv.manager", ask = FALSE)
-          cat("\nInstalled dv.manager version:", as.character(packageVersion("dv.manager")), "\n")
-          cat("Install path:", find.package("dv.manager"), "\n")
+          Rscript -e "pak::pak('Boehringer-Ingelheim/dv.manager', ask = FALSE)"
+          Rscript -e "cat('Installed dv.manager version:', as.character(packageVersion('dv.manager')), '\n')"
+          Rscript -e "cat('Install path:', find.package('dv.manager'), '\n')"
 
       - name: Smoke test load
-        shell: Rscript {0}
-        run: |
-          library(dv.manager)
-          cat("dv.manager loaded OK\n")
+        run: Rscript -e "library(dv.manager); cat('dv.manager loaded OK\n')"
