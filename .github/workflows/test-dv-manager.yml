@@ -26,6 +26,13 @@ jobs:
           rtools-version: "45"
           use-public-rspm: true
 
+      - name: Install system dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libcurl4-openssl-dev libssl-dev libxml2-dev git
+
       - name: Print environment
         run: |
           Rscript -e "cat('OS:', Sys.info()[['sysname']], '\n')"
@@ -34,7 +41,7 @@ jobs:
 
       - name: Install pak
         run: |
-          Rscript -e "lib <- Sys.getenv('R_LIBS_USER'); dir.create(lib, recursive = TRUE, showWarnings = FALSE); install.packages('pak', lib = lib, repos = 'https://cloud.r-project.org')"
+          Rscript -e "lib <- Sys.getenv('R_LIBS_USER'); dir.create(lib, recursive = TRUE, showWarnings = FALSE); install.packages('pak', lib = lib)"
           Rscript -e "stopifnot(requireNamespace('pak', quietly = TRUE)); cat('pak installed OK\n')"
 
       - name: Install dv.manager from GitHub (latest release)
