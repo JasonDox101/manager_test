@@ -1,0 +1,54 @@
+name: Test dv.manager 3.1.0 compile
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+
+concurrency:
+  group: test-dv-manager-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compile:
+    name: dv.manager on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+
+    steps:
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: "4.5.2"
+          rtools-version: "45"
+          use-public-rspm: true
+
+      - name: Print environment
+        shell: Rscript {0}
+        run: |
+          cat("OS:", Sys.info()[["sysname"]], "\n")
+          cat("R:", R.version$version.string, "\n")
+          if (.Platform$OS.type == "windows") {
+            cat("Rtools on PATH:", any(grepl("rtools", Sys.getenv("PATH"), ignore.case = TRUE)), "\n")
+          }
+
+      - name: Install pak
+        shell: Rscript {0}
+        run: |
+          install.packages("pak", repos = "https://cloud.r-project.org")
+
+      - name: Install dv.manager from GitHub (latest release)
+        shell: Rscript {0}
+        run: |
+          pak::pak("Boehringer-Ingelheim/dv.manager", ask = FALSE)
+          cat("\nInstalled dv.manager version:", as.character(packageVersion("dv.manager")), "\n")
+          cat("Install path:", find.package("dv.manager"), "\n")
+
+      - name: Smoke test load
+        shell: Rscript {0}
+        run: |
+          library(dv.manager)
+          cat("dv.manager loaded OK\n")
